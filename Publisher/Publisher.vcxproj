@@ -18,6 +18,18 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="publish.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="publish.cpp" />
+    <ClCompile Include="publisher.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PubSub_Lib\PubSub_Lib.vcxproj">
+      <Project>{f99a1b03-fa4c-4451-bd79-a3d4454121e1}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
