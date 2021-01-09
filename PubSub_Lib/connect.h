@@ -12,4 +12,5 @@
 // returns false if an error occured
 bool connect(int type);
 
+// Initialize windows sockets library
 bool initializeWindowsSockets();
