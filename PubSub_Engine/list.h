@@ -19,16 +19,16 @@ typedef struct List_st
 List* initList(int limit);
 
 // add item to end of list if under the size limit
-// returns 1 if successful
-// returns 0 if error
-int addAtEnd(List* list, ListItem* item);
+// returns true if successful
+// returns false if error
+bool addAtEnd(List* list, ListItem* item);
 
 // deletes item from list at specified index
-// returns 1 if successful
-// returns 0 if error
-int deleteAt(List* list, int index);
+// returns true if successful
+// returns false if error
+bool deleteAt(List* list, int index);
 
 // free list and all elements from memory
-// returns 1 if successful
-// returns 0 if error
-int deleteList(List* list);
+// returns true if successful
+// returns false if error
+bool deleteList(List* list);

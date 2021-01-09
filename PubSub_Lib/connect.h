@@ -5,6 +5,6 @@
 
 // connect to PubSub Engine
 // type - type of connection (publisher/subscriber)
-// returns 0 if successful 
-// returns -1 if an error occured
-int connect(int type);
+// returns true if successful 
+// returns false if an error occured
+bool connect(int type);
