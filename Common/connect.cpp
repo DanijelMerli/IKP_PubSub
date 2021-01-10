@@ -1,7 +1,7 @@
 #pragma once
 #include "connect.h"
 
-bool connect(int type)
+bool connect(PCSTR port)
 {
     return false;
 }
