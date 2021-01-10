@@ -1,9 +1,6 @@
 #include "../Common/connect.h"
 #include <WS2tcpip.h>
 
-#define DEFAULT_SUB_PORT "10000"
-#define DEFAULT_PUB_PORT "10001"
-
 int main()
 {
     SOCKET pubListenSocket = INVALID_SOCKET;
@@ -14,6 +11,7 @@ int main()
 
     if (initializeWindowsSockets() == false)
     {
+        // not logging anything cause the function itself logs errors 
         return 1;
     }
 
@@ -28,7 +26,7 @@ int main()
     hints.ai_flags = AI_PASSIVE;     // 
 
     // Resolve the server address and port for publishers
-    iResult = getaddrinfo(NULL, DEFAULT_PUB_PORT, &hints, &resultingAddress);
+    iResult = getaddrinfo(NULL, PUB_PORT, &hints, &resultingAddress);
     if (iResult != 0)
     {
         printf("getaddrinfo failed with error: %d\n", iResult);
@@ -56,7 +54,7 @@ int main()
     }
 
     // Resolve the server address and port for subscribers
-    iResult = getaddrinfo(NULL, DEFAULT_SUB_PORT, &hints, &resultingAddress);
+    iResult = getaddrinfo(NULL, SUB_PORT, &hints, &resultingAddress);
     if (iResult != 0)
     {
         printf("getaddrinfo 2 failed with error: %d\n", iResult);
@@ -130,6 +128,30 @@ int main()
         WSACleanup();
         return 1;
     }
+
+    // Accept publisher socket connection
+    SOCKET pubSocket = accept(pubListenSocket, NULL, NULL);
+    if (WSAGetLastError() != WSAEWOULDBLOCK && pubSocket == INVALID_SOCKET)
+    {
+        printf("accept failed with error: %d\n", WSAGetLastError());
+        closesocket(pubListenSocket);
+        closesocket(subListenSocket);
+        WSACleanup();
+        return 1;
+    }
+
+    // Accept subscriber socket connection
+    SOCKET subSocket = accept(subListenSocket, NULL, NULL);
+    if (WSAGetLastError() != WSAEWOULDBLOCK && subSocket == INVALID_SOCKET)
+    {
+        printf("accept failed with error: %d\n", WSAGetLastError());
+        closesocket(pubListenSocket);
+        closesocket(subListenSocket);
+        WSACleanup();
+        return 1;
+    }
+
+    getchar();
 
     closesocket(pubListenSocket);
     closesocket(subListenSocket);
