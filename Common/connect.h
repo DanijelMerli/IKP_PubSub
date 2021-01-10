@@ -1,7 +1,6 @@
 #pragma once
-
-#include <WinSock2.h>
 #include <stdio.h>
+#include <WinSock2.h>
 
 #define TYPE_PUBLISHER 0
 #define TYPE_SUBSCRIBER 1
@@ -13,4 +12,4 @@
 bool connect(int type);
 
 // Initialize windows sockets library
-bool initializeWindowsSockets();
+bool initializeWindowsSockets(); 
