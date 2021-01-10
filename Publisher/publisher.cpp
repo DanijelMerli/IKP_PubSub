@@ -1,4 +1,4 @@
-#include "../PubSub_Lib/connect.h"
+#include "../Common/connect.h"
 #include "publish.h"
 
 int main()
