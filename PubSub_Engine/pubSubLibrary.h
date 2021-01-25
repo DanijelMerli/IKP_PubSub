@@ -6,7 +6,6 @@
 typedef struct
 {
     SOCKET socket;
-    SOCKADDR_STORAGE clientAddr;
 } PerHandleData;
 
 // Typedef definition
@@ -22,9 +21,9 @@ typedef struct
 // accepts publisher connections 
 // adds accepted socket handles to IOCP
 // returns -1 if error
-DWORD WINAPI pubAccept(HANDLE completionPort);
+DWORD WINAPI pubAccept(LPVOID completionPort);
 
 // accepts subscriber connections 
 // adds accepted socket handles to IOCP
 // returns -1 if error
-DWORD WINAPI subAccept(HANDLE completionPort);
+DWORD WINAPI subAccept(LPVOID completionPort);

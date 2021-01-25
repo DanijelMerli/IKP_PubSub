@@ -4,6 +4,7 @@
 DWORD WINAPI pubAccept(LPVOID completionPortId)
 {
     HANDLE completionPort = (HANDLE)completionPortId;
+    char* dataBuff = (char*)malloc(DEFAULT_BUFLEN);
 
     // Prepare address information structures
     addrinfo* resultingAddress = NULL;
@@ -83,17 +84,47 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
             return -1;
         }
 
-        // perHandleData = (PerHandleData*)GlobalAlloc(GPTR, sizeof(PerHandleData))
-        perHandleData = (PerHandleData*)malloc(sizeof(PerHandleData));
         printf("Publisher connected.\n");
 
-        perHandleData->socket = acceptSocket;
-        memcpy(&perHandleData->clientAddr, &sockAddr, addrLen);
+        if ((perHandleData = (PerHandleData*)GlobalAlloc(GPTR, sizeof(PerHandleData))) == NULL)
+        {
+            printf("GlobalAlloc() failed with error %d\n", GetLastError());
+            return -1;
+        }
 
-        if (CreateIoCompletionPort((HANDLE)acceptSocket, completionPort, (DWORD)perHandleData, 0) == NULL)
+        printf("Socket %d connected\n", acceptSocket);
+        perHandleData->socket = acceptSocket;
+
+        if (CreateIoCompletionPort((HANDLE)acceptSocket, completionPort, (ULONG_PTR)perHandleData, 0) == NULL)
         {
             printf("CreateIoCompletionPort failed with error %d\n", GetLastError());
             return -1;
+        }
+
+        PerIoData* perIoData;
+
+        // Create per I/O socket information structure to associate with the WSARecv call below
+        if ((perIoData = (PerIoData*)GlobalAlloc(GPTR, sizeof(PerIoData))) == NULL)
+        {
+            printf("GlobalAlloc() failed with error %d\n", GetLastError());
+            return 1;
+        }
+
+        ZeroMemory(&(perIoData->Overlapped), sizeof(OVERLAPPED));
+        perIoData->BytesSEND = 0;
+        perIoData->BytesRECV = 0;
+        perIoData->DataBuf.len = DEFAULT_BUFLEN;
+        perIoData->DataBuf.buf = perIoData->Buffer;
+        DWORD Flags = 0;
+        DWORD RecvBytes;
+
+        if (WSARecv(acceptSocket, &(perIoData->DataBuf), 1, &RecvBytes, &Flags, &(perIoData->Overlapped), NULL) == SOCKET_ERROR)
+        {
+            if (WSAGetLastError() != ERROR_IO_PENDING)
+            {
+                printf("WSARecv() failed with error %d\n", WSAGetLastError());
+                return -1;
+            }
         }
 	}
 }
@@ -101,6 +132,7 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
 DWORD WINAPI subAccept(LPVOID completionPortId)
 {
     HANDLE completionPort = (HANDLE)completionPortId;
+    char* dataBuff = (char*)malloc(DEFAULT_BUFLEN);
 
     // Prepare address information structures
     addrinfo* resultingAddress = NULL;
@@ -127,7 +159,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         return -1;
     }
 
-    // Create a SOCKET for subscribers to connect to server
+    // Create a SOCKET for publishers to connect to server
     listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (listenSocket == INVALID_SOCKET)
     {
@@ -137,7 +169,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         return -1;
     }
 
-    // Setup the TCP subscriber listening socket - bind port number and local address to socket
+    // Setup the TCP publisher listening socket - bind port number and local address to socket
     iResult = bind(listenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
     if (iResult == SOCKET_ERROR)
     {
@@ -161,7 +193,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         return -1;
     }
 
-    printf("Accepting new subscriber connections...\n");
+    printf("Accepting new publisher connections...\n");
 
     while (TRUE)
     {
@@ -169,9 +201,9 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         SOCKADDR_IN sockAddr;
         int addrLen = sizeof(sockAddr);
 
-        // Accept subscribersocket connection
+        // Accept publisher socket connection
         acceptSocket = accept(listenSocket, (sockaddr*)&sockAddr, &addrLen);
-        if (acceptSocket == INVALID_SOCKET)
+        if (WSAGetLastError() != WSAEWOULDBLOCK && acceptSocket == INVALID_SOCKET)
         {
             printf("accept failed with error: %d\n", WSAGetLastError());
             closesocket(listenSocket);
@@ -179,19 +211,48 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
             WSACleanup();
             return -1;
         }
-            
 
-        // perHandleData = (PerHandleData*)GlobalAlloc(GPTR, sizeof(PerHandleData))
-        perHandleData = (PerHandleData*)malloc(sizeof(PerHandleData));
-        printf("Subscriber connected.\n");
+        printf("Publisher connected.\n");
 
+        if ((perHandleData = (PerHandleData*)GlobalAlloc(GPTR, sizeof(PerHandleData))) == NULL)
+        {
+            printf("GlobalAlloc() failed with error %d\n", GetLastError());
+            return -1;
+        }
+
+        printf("Socket %d connected\n", acceptSocket);
         perHandleData->socket = acceptSocket;
-        memcpy(&perHandleData->clientAddr, &sockAddr, addrLen);
 
-        if (CreateIoCompletionPort((HANDLE)acceptSocket, completionPort, (DWORD)perHandleData, 0) == NULL)
+        if (CreateIoCompletionPort((HANDLE)acceptSocket, completionPort, (ULONG_PTR)perHandleData, 0) == NULL)
         {
             printf("CreateIoCompletionPort failed with error %d\n", GetLastError());
             return -1;
+        }
+
+        PerIoData* perIoData;
+
+        // Create per I/O socket information structure to associate with the WSARecv call below
+        if ((perIoData = (PerIoData*)GlobalAlloc(GPTR, sizeof(PerIoData))) == NULL)
+        {
+            printf("GlobalAlloc() failed with error %d\n", GetLastError());
+            return 1;
+        }
+
+        ZeroMemory(&(perIoData->Overlapped), sizeof(OVERLAPPED));
+        perIoData->BytesSEND = 0;
+        perIoData->BytesRECV = 0;
+        perIoData->DataBuf.len = DEFAULT_BUFLEN;
+        perIoData->DataBuf.buf = perIoData->Buffer;
+        DWORD Flags = 0;
+        DWORD RecvBytes;
+
+        if (WSARecv(acceptSocket, &(perIoData->DataBuf), 1, &RecvBytes, &Flags, &(perIoData->Overlapped), NULL) == SOCKET_ERROR)
+        {
+            if (WSAGetLastError() != ERROR_IO_PENDING)
+            {
+                printf("WSARecv() failed with error %d\n", WSAGetLastError());
+                return -1;
+            }
         }
     }
 }
