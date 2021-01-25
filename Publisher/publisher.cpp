@@ -41,7 +41,17 @@ int main()
     while (TRUE)
     {
         printf("Send message: \n");
-        fgets(sendbuff, DEFAULT_BUFLEN, stdin);
+        if (fgets(sendbuff, DEFAULT_BUFLEN, stdin) == NULL)
+        {
+            printf("fgets failed with error.\n");
+            closesocket(connectSocket);
+            return -1;
+        }
+        
+        // trim newline at end
+        if (sendbuff[strlen(sendbuff) - 1] == '\n')
+            sendbuff[strlen(sendbuff) - 1] = 0;
+
         iResult = send(connectSocket, sendbuff, DEFAULT_BUFLEN, 0);
         if (iResult == SOCKET_ERROR)
         {
