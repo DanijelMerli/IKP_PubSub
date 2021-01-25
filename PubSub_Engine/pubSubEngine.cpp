@@ -62,84 +62,25 @@ DWORD WINAPI serverWorkerThread(LPVOID CompletionPortID)
 			printf("GetQueuedCompletionStatus() failed with error %d\n", GetLastError());
 			return 0;
 		}
-		else
-			printf("GetQueuedCompletionStatus() is OK!\n");
 
-		// First check to see if an error has occurred on the socket and if so
-		// then close the socket and cleanup the SOCKET_INFORMATION structure
-		// associated with the socket
-		if (BytesTransferred == 0)
+		printf("Message from socket %d:\n%s\n", perHandleData->socket, perIoData->Buffer);
+
+		perIoData->BytesRECV = 0;
+
+		// Post another WSARecv() request
+		Flags = 0;
+		ZeroMemory(&(perIoData->Overlapped), sizeof(OVERLAPPED));
+		perIoData->DataBuf.len = DEFAULT_BUFLEN;
+		perIoData->DataBuf.buf = perIoData->Buffer;
+
+		if (WSARecv(perHandleData->socket, &(perIoData->DataBuf), 1, &RecvBytes, &Flags,
+					&(perIoData->Overlapped), NULL) == SOCKET_ERROR)
 		{
-			printf("Closing socket %d\n", perHandleData->socket);
-
-			if (closesocket(perHandleData->socket) == SOCKET_ERROR)
+			if (WSAGetLastError() != ERROR_IO_PENDING)
 			{
-				printf("closesocket() failed with error %d\n", WSAGetLastError());
+				printf("WSARecv() failed with error %d\n", WSAGetLastError());
 				return 0;
 			}
-			else
-				printf("closesocket() is fine!\n");
-
-			GlobalFree(perHandleData);
-			GlobalFree(perIoData);
-			continue;
-		}
-
-		// Check to see if the BytesRECV field equals zero. If this is so, then
-		// this means a WSARecv call just completed so update the BytesRECV field
-		// with the BytesTransferred value from the completed WSARecv() call
-		if (perIoData->BytesRECV == 0)
-		{
-			perIoData->BytesRECV = BytesTransferred;
-			perIoData->BytesSEND = 0;
-		}
-		else
-		{
-			perIoData->BytesSEND += BytesTransferred;
-		}
-
-		if (perIoData->BytesRECV > perIoData->BytesSEND)
-		{
-			// Post another WSASend() request.
-			// Since WSASend() is not guaranteed to send all of the bytes requested,
-			// continue posting WSASend() calls until all received bytes are sent.
-			ZeroMemory(&(perIoData->Overlapped), sizeof(OVERLAPPED));
-			perIoData->DataBuf.buf = perIoData->Buffer + perIoData->BytesSEND;
-			perIoData->DataBuf.len = perIoData->BytesRECV - perIoData->BytesSEND;
-
-			if (WSASend(perHandleData->socket, &(perIoData->DataBuf), 1, &SendBytes, 0,
-						&(perIoData->Overlapped), NULL) == SOCKET_ERROR)
-			{
-				if (WSAGetLastError() != ERROR_IO_PENDING)
-				{
-					printf("WSASend() failed with error %d\n", WSAGetLastError());
-					return 0;
-				}
-			}
-			else
-				printf("WSASend() is OK!\n");
-		}
-		else
-		{
-			perIoData->BytesRECV = 0;
-
-			// Now that there are no more bytes to send post another WSARecv() request
-			Flags = 0;
-			ZeroMemory(&(perIoData->Overlapped), sizeof(OVERLAPPED));
-			perIoData->DataBuf.len = DEFAULT_BUFLEN;
-			perIoData->DataBuf.buf = perIoData->Buffer;
-
-			if (WSARecv(perHandleData->socket, &(perIoData->DataBuf), 1, &RecvBytes, &Flags,
-						&(perIoData->Overlapped), NULL) == SOCKET_ERROR)
-			{
-				if (WSAGetLastError() != ERROR_IO_PENDING)
-				{
-					printf("WSARecv() failed with error %d\n", WSAGetLastError());
-					return 0;
-				}
-			}
-			else
-				printf("WSARecv() is OK!\n");
 		}
 	}
 }
