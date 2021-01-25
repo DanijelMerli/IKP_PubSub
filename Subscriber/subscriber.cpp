@@ -5,6 +5,7 @@ int main()
 {
     // socket used to communicate with server
     SOCKET connectSocket = INVALID_SOCKET;
+    char* sendbuff = (char*)malloc(DEFAULT_BUFLEN);
     // variable used to store function return value
     int iResult;
 
@@ -35,6 +36,17 @@ int main()
         closesocket(connectSocket);
         WSACleanup();
         return 1;
+    }
+
+    while (TRUE)
+    {
+        printf("Send message: \n");
+        fgets(sendbuff, DEFAULT_BUFLEN, stdin);
+        iResult = send(connectSocket, sendbuff, DEFAULT_BUFLEN, 0);
+        if (iResult == SOCKET_ERROR)
+        {
+            printf("send failed with error: %d\n", WSAGetLastError());
+        }
     }
 
     getchar();
