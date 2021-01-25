@@ -1,13 +1,14 @@
 #include "../Common/connect.h"
-#include <WS2tcpip.h>
+#include "pubSubLibrary.h"
+
+DWORD WINAPI serverWorkerThread(LPVOID lpParam);
 
 int main()
 {
-    SOCKET pubListenSocket = INVALID_SOCKET;
-    SOCKET subListenSocket = INVALID_SOCKET;
-
-    // store function return value
-    int iResult;
+    SYSTEM_INFO systemInfo;
+    GetSystemInfo(&systemInfo);
+    HANDLE completionPort;
+    HANDLE threadHandle;
 
     if (initializeWindowsSockets() == false)
     {
@@ -15,146 +16,130 @@ int main()
         return 1;
     }
 
-    // Prepare address information structures
-    addrinfo* resultingAddress = NULL;
-    addrinfo hints;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;       // IPv4 address
-    hints.ai_socktype = SOCK_STREAM; // Provide reliable data streaming
-    hints.ai_protocol = IPPROTO_TCP; // Use TCP protocol
-    hints.ai_flags = AI_PASSIVE;     // 
-
-    // Resolve the server address and port for publishers
-    iResult = getaddrinfo(NULL, PUB_PORT, &hints, &resultingAddress);
-    if (iResult != 0)
+    completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+    if (completionPort == NULL)
     {
-        printf("getaddrinfo failed with error: %d\n", iResult);
-        WSACleanup();
-        return 1;
-    }
-    // Create a SOCKET for publishers to connect to server
-    pubListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (pubListenSocket == INVALID_SOCKET)
-    {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
-        freeaddrinfo(resultingAddress);
-        WSACleanup();
-        return 1;
-    }
-    // Setup the TCP publisher listening socket - bind port number and local address to socket
-    iResult = bind(pubListenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("bind failed with error: %d\n", WSAGetLastError());
-        freeaddrinfo(resultingAddress);
-        closesocket(pubListenSocket);
+        printf("CreateIoCompletionPort failed with error: %d\n", GetLastError());
         WSACleanup();
         return 1;
     }
 
-    // Resolve the server address and port for subscribers
-    iResult = getaddrinfo(NULL, SUB_PORT, &hints, &resultingAddress);
-    if (iResult != 0)
+    for (int i = 0; i < systemInfo.dwNumberOfProcessors; i++)
     {
-        printf("getaddrinfo 2 failed with error: %d\n", iResult);
-        WSACleanup();
-        return 1;
-    }
-    // Create a SOCKET for subscribers to connect to server
-    subListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (subListenSocket == INVALID_SOCKET)
-    {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
-        freeaddrinfo(resultingAddress);
-        WSACleanup();
-        return 1;
-    }
-    // Setup the TCP subscriber listening socket - bind port number and local address to socket
-    iResult = bind(subListenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("bind failed with error: %d\n", WSAGetLastError());
-        freeaddrinfo(resultingAddress);
-        closesocket(pubListenSocket);
-        closesocket(subListenSocket);
-        WSACleanup();
-        return 1;
+        if ((threadHandle = CreateThread(NULL, 0, serverWorkerThread, completionPort, 0, NULL)) == NULL)
+        {
+            printf("CreateThread failed with error: %d", GetLastError());
+            return 1;
+        }
+
+        CloseHandle(threadHandle);
     }
 
-    // Since we don't need resultingAddress any more, free it
-    freeaddrinfo(resultingAddress);
-
-    unsigned long int nonBlocking = 1;
-
-    // Set pubListenSocket in listening mode 
-    iResult = listen(pubListenSocket, SOMAXCONN);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("listen failed with error: %d\n", WSAGetLastError());
-        closesocket(pubListenSocket);
-        closesocket(subListenSocket);
-        WSACleanup();
-        return 1;
-    }
-    // Set pubListenSocket to nonblocking
-    iResult = ioctlsocket(pubListenSocket, FIONBIO, &nonBlocking);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("ioctlsocket failed with error: %d\n", WSAGetLastError());
-        closesocket(pubListenSocket);
-        closesocket(subListenSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    // Set pubListenSocket in listening mode
-    iResult = listen(subListenSocket, SOMAXCONN);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("listen failed with error: %d\n", WSAGetLastError());
-        closesocket(pubListenSocket);
-        closesocket(subListenSocket);
-        WSACleanup();
-        return 1;
-    }
-    // Set subListenSocket to nonblocking
-    iResult = ioctlsocket(subListenSocket, FIONBIO, &nonBlocking);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("ioctlsocket failed with error: %d\n", WSAGetLastError());
-        closesocket(pubListenSocket);
-        closesocket(subListenSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    // Accept publisher socket connection
-    SOCKET pubSocket = accept(pubListenSocket, NULL, NULL);
-    if (WSAGetLastError() != WSAEWOULDBLOCK && pubSocket == INVALID_SOCKET)
-    {
-        printf("accept failed with error: %d\n", WSAGetLastError());
-        closesocket(pubListenSocket);
-        closesocket(subListenSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    // Accept subscriber socket connection
-    SOCKET subSocket = accept(subListenSocket, NULL, NULL);
-    if (WSAGetLastError() != WSAEWOULDBLOCK && subSocket == INVALID_SOCKET)
-    {
-        printf("accept failed with error: %d\n", WSAGetLastError());
-        closesocket(pubListenSocket);
-        closesocket(subListenSocket);
-        WSACleanup();
-        return 1;
-    }
+    HANDLE pubAcceptThread = CreateThread(NULL, 0, pubAccept, completionPort, 0, NULL);
+    HANDLE subAcceptThread = CreateThread(NULL, 0, subAccept, completionPort, 0, NULL);
 
     getchar();
 
-    closesocket(pubListenSocket);
-    closesocket(subListenSocket);
+    CloseHandle(pubAcceptThread);
+    CloseHandle(subAcceptThread);
     WSACleanup();
     return 0;
+}
+
+DWORD WINAPI serverWorkerThread(LPVOID CompletionPortID)
+{
+	HANDLE CompletionPort = (HANDLE)CompletionPortID;
+	DWORD BytesTransferred;
+	PerHandleData* perHandleData;
+	PerIoData* perIoData;
+	DWORD SendBytes, RecvBytes;
+	DWORD Flags;
+
+	while (TRUE)
+	{
+		if (GetQueuedCompletionStatus(CompletionPort, &BytesTransferred, (PULONG_PTR)&perHandleData, (LPOVERLAPPED*)&perIoData, INFINITE) == 0)
+		{
+			printf("GetQueuedCompletionStatus() failed with error %d\n", GetLastError());
+			return 0;
+		}
+		else
+			printf("GetQueuedCompletionStatus() is OK!\n");
+
+		// First check to see if an error has occurred on the socket and if so
+		// then close the socket and cleanup the SOCKET_INFORMATION structure
+		// associated with the socket
+		if (BytesTransferred == 0)
+		{
+			printf("Closing socket %d\n", perHandleData->socket);
+
+			if (closesocket(perHandleData->socket) == SOCKET_ERROR)
+			{
+				printf("closesocket() failed with error %d\n", WSAGetLastError());
+				return 0;
+			}
+			else
+				printf("closesocket() is fine!\n");
+
+			GlobalFree(perHandleData);
+			GlobalFree(perIoData);
+			continue;
+		}
+
+		// Check to see if the BytesRECV field equals zero. If this is so, then
+		// this means a WSARecv call just completed so update the BytesRECV field
+		// with the BytesTransferred value from the completed WSARecv() call
+		if (perIoData->BytesRECV == 0)
+		{
+			perIoData->BytesRECV = BytesTransferred;
+			perIoData->BytesSEND = 0;
+		}
+		else
+		{
+			perIoData->BytesSEND += BytesTransferred;
+		}
+
+		if (perIoData->BytesRECV > perIoData->BytesSEND)
+		{
+			// Post another WSASend() request.
+			// Since WSASend() is not guaranteed to send all of the bytes requested,
+			// continue posting WSASend() calls until all received bytes are sent.
+			ZeroMemory(&(perIoData->Overlapped), sizeof(OVERLAPPED));
+			perIoData->DataBuf.buf = perIoData->Buffer + perIoData->BytesSEND;
+			perIoData->DataBuf.len = perIoData->BytesRECV - perIoData->BytesSEND;
+
+			if (WSASend(perHandleData->socket, &(perIoData->DataBuf), 1, &SendBytes, 0,
+						&(perIoData->Overlapped), NULL) == SOCKET_ERROR)
+			{
+				if (WSAGetLastError() != ERROR_IO_PENDING)
+				{
+					printf("WSASend() failed with error %d\n", WSAGetLastError());
+					return 0;
+				}
+			}
+			else
+				printf("WSASend() is OK!\n");
+		}
+		else
+		{
+			perIoData->BytesRECV = 0;
+
+			// Now that there are no more bytes to send post another WSARecv() request
+			Flags = 0;
+			ZeroMemory(&(perIoData->Overlapped), sizeof(OVERLAPPED));
+			perIoData->DataBuf.len = DEFAULT_BUFLEN;
+			perIoData->DataBuf.buf = perIoData->Buffer;
+
+			if (WSARecv(perHandleData->socket, &(perIoData->DataBuf), 1, &RecvBytes, &Flags,
+						&(perIoData->Overlapped), NULL) == SOCKET_ERROR)
+			{
+				if (WSAGetLastError() != ERROR_IO_PENDING)
+				{
+					printf("WSARecv() failed with error %d\n", WSAGetLastError());
+					return 0;
+				}
+			}
+			else
+				printf("WSARecv() is OK!\n");
+		}
+	}
 }
