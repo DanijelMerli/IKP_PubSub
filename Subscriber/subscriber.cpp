@@ -41,7 +41,6 @@ int main()
     while (TRUE)
     {
         printf("Send message: \n");
-        fgets(sendbuff, DEFAULT_BUFLEN, stdin);
 
         if (fgets(sendbuff, DEFAULT_BUFLEN, stdin) == NULL)
         {
