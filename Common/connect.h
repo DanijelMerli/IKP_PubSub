@@ -13,9 +13,9 @@
 
 // connect to PubSub Engine
 // port - port of server socket (publisher-10000 / subscriber-10001)
-// returns true if successful 
-// returns false if an error occured
-bool connect(PCSTR port);
+// returns socket handle if successful 
+// returns INVALID_SOCKET if an error occured
+SOCKET connect(DWORD port);
 
 // Initialize windows sockets library
 bool initializeWindowsSockets(); 
