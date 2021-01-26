@@ -3,9 +3,16 @@
 #include <WS2tcpip.h>
 #include "../Common/connect.h"
 
+enum SocketType 
+{
+	Publisher, 
+	Subscriber
+};
+
 typedef struct
 {
     SOCKET socket;
+	SocketType type;
 } PerHandleData;
 
 // Typedef definition

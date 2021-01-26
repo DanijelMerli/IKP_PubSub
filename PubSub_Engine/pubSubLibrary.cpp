@@ -94,6 +94,7 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
 
         printf("Socket %d connected\n", acceptSocket);
         perHandleData->socket = acceptSocket;
+        perHandleData->type = Publisher;
 
         if (CreateIoCompletionPort((HANDLE)acceptSocket, completionPort, (ULONG_PTR)perHandleData, 0) == NULL)
         {
@@ -222,6 +223,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
 
         printf("Socket %d connected\n", acceptSocket);
         perHandleData->socket = acceptSocket;
+        perHandleData->type = Subscriber;
 
         if (CreateIoCompletionPort((HANDLE)acceptSocket, completionPort, (ULONG_PTR)perHandleData, 0) == NULL)
         {

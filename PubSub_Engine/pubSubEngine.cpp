@@ -63,13 +63,26 @@ DWORD WINAPI serverWorkerThread(LPVOID CompletionPortID)
 			return 0;
 		}
 
-		printf("Message from socket %d:\n%s\n", perHandleData->socket, perIoData->Buffer);
+        // PUBLISHER
+        if (perHandleData->type == Publisher)
+        {
+            printf("Message from Publisher %d:\n%s\n", perHandleData->socket, perIoData->Buffer);
+        }
+        // SUBSCRIBER
+        else if (perHandleData->type == Subscriber)
+        {
+            printf("Message from Subscriber %d:\n%s\n", perHandleData->socket, perIoData->Buffer);
+        }
+        else
+        {
+            printf("Sender of message did not specify type!\n");
+        }
 
-		perIoData->BytesRECV = 0;
 
 		// Post another WSARecv() request
 		Flags = 0;
 		ZeroMemory(&(perIoData->Overlapped), sizeof(OVERLAPPED));
+        perIoData->BytesRECV = 0;
 		perIoData->DataBuf.len = DEFAULT_BUFLEN;
 		perIoData->DataBuf.buf = perIoData->Buffer;
 
