@@ -1,5 +1,7 @@
 #include "../Common/connect.h"
 #include "pubSubLibrary.h"
+#include "../Publisher/publish.h"
+
 
 DWORD WINAPI serverWorkerThread(LPVOID lpParam);
 
@@ -54,7 +56,9 @@ DWORD WINAPI serverWorkerThread(LPVOID CompletionPortID)
 	PerIoData* perIoData;
 	DWORD SendBytes, RecvBytes;
 	DWORD Flags;
+    
 
+    
 	while (TRUE)
 	{
 		if (GetQueuedCompletionStatus(CompletionPort, &BytesTransferred, (PULONG_PTR)&perHandleData, (LPOVERLAPPED*)&perIoData, INFINITE) == 0)
@@ -66,7 +70,8 @@ DWORD WINAPI serverWorkerThread(LPVOID CompletionPortID)
         // PUBLISHER
         if (perHandleData->type == Publisher)
         {
-            printf("Message from Publisher %d:\n%s\n", perHandleData->socket, perIoData->Buffer);
+            PublisherData* pubdata = (PublisherData*)perIoData->Buffer;
+            printf("Message from Publisher %d:\n Topic: %s\n Message:\n", perHandleData->socket, pubdata->message);
         }
         // SUBSCRIBER
         else if (perHandleData->type == Subscriber)
