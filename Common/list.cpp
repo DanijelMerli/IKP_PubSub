@@ -1,13 +1,9 @@
 #pragma once
 #include "list.h"
-#include<stddef.h>
-#include<stdio.h>
-#include<stdlib.h>
 
-List* initList(int limit)
+List* list_init(int limit)
 {
-	List* lista = NULL;
-	lista = (List*)malloc(sizeof(lista));
+	List* lista = (List*)malloc(sizeof(List));
 	lista->head = NULL;
 	lista->limit = limit;
 	lista->len = 0;
@@ -15,34 +11,22 @@ List* initList(int limit)
 	return lista;
 }
 
-bool addAtEnd(List* list, ListItem* item)
+bool list_addAtEnd(List* list, char* data)
 {
-	ListItem* novi = NULL;
-
-	List* lista;
-	novi = (ListItem*)malloc(sizeof(ListItem));
-	lista = (List*)malloc(sizeof(lista));
-	lista = list;
-	novi->data = item->data;
-	novi->next = NULL;
-
-	if (novi == NULL)
+	if (list->len < list->limit)
 	{
-		printf("nije moguce \n");
-		return false;
-	}
+		ListItem* item = (ListItem*)malloc(sizeof(ListItem));
+		item->data = (char*)malloc(100);
+		strcpy_s(item->data, 100, data);
+		item->next = NULL;
 
+		ListItem* current = list->head;
 
-	ListItem* current = lista->head;
-
-
-	if (lista->len < lista->limit)
-	{
 		if (current == NULL)
 		{
-			current = novi;
-			lista->head = current;
-			lista->len++;
+			current = item;
+			list->head = current;
+			list->len++;
 			return true;
 		}
 		else
@@ -52,10 +36,8 @@ bool addAtEnd(List* list, ListItem* item)
 				current = current->next;
 			}
 
-			current->next = novi;
-			lista->len++;
-
-			printf("Uspesno dodato na kraj liste\n");
+			current->next = item;
+			list->len++;
 		}
 	}
 	else {
@@ -66,7 +48,34 @@ bool addAtEnd(List* list, ListItem* item)
 	return true;
 }
 
-bool deleteAt(List* list, int index)
+char* list_getAt(List* list, int index)
+{
+	if (list == NULL)
+	{
+		printf("List uninitialized.\n");
+		return NULL;
+	}
+	if (list->len <= index)
+	{
+		printf("Index out of bounds.\n");
+		return NULL;
+	}
+	if (index == 0)
+	{
+		return list->head->data;
+	}
+
+	ListItem* current = list->head;
+
+	for (int i = 1; i <= index; i++)
+	{
+		current = current->next;
+	}
+
+	return current->data;
+}
+
+bool list_deleteAt(List* list, int index)
 {
 	List* lista = list;
 	ListItem* pomocni = lista->head;
@@ -98,20 +107,32 @@ bool deleteAt(List* list, int index)
 	return true;
 }
 
-bool deleteList(List* list)
+bool list_dump(List* list)
 {
-	List* lista = list;
-	ListItem* current = lista->head;
+	if (list == NULL)
+	{
+		printf("list is nullptr\n");
+		return false;
+	}
+
+	if (list->len == 0)
+	{
+		free(list);
+		return true;
+	}
+
+	ListItem* current = list->head;
 	ListItem* temp;
 
 	while (current != NULL)
 	{
 		temp = current->next;
+		free(current->data);
 		free(current);
 		current = temp;
 	}
+	
 	list->head = NULL;
-
 
 	return true;
 }
