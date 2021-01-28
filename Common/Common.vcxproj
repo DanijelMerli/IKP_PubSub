@@ -20,10 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="connect.h" />
+    <ClInclude Include="hashtable.h" />
     <ClInclude Include="list.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="connect.cpp" />
+    <ClCompile Include="hashtable.cpp" />
     <ClCompile Include="list.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
