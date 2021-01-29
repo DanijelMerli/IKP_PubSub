@@ -19,10 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="publish.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="publish.cpp" />
     <ClCompile Include="publisher.cpp" />
   </ItemGroup>
   <ItemGroup>

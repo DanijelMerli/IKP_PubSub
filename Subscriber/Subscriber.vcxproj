@@ -140,10 +140,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="subscribe.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="subscribe.cpp" />
     <ClCompile Include="subscriber.cpp" />
   </ItemGroup>
   <ItemGroup>
