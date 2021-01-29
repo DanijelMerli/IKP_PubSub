@@ -1,4 +1,4 @@
-#include "publish.h"
+#include "../Common/connect.h"
 
 int main()
 {
@@ -39,7 +39,7 @@ int main()
             
         }
         if (pd.message[strlen(pd.message) - 1] == '\n')
-            pd.message[strlen(pd.message) - 1] == 0;
+            pd.message[strlen(pd.message) - 1] = 0;
 
         iResult = send(connectSocket, (char*)&pd, sizeof(PublisherData), 0);
         if (iResult == SOCKET_ERROR)
