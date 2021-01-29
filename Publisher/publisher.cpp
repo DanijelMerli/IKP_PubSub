@@ -5,7 +5,8 @@ int main()
 {
     // socket used to communicate with server
     SOCKET connectSocket = INVALID_SOCKET;
-    char* sendbuff = (char*)malloc(DEFAULT_BUFLEN);
+    PublisherData pd;
+    
     // variable used to store function return value
     int iResult;
 
@@ -19,7 +20,7 @@ int main()
     while (TRUE)
     {
         printf("Topic: \n");
-        if (fgets(sendbuff, DEFAULT_BUFLEN, stdin) == NULL)
+        if (fgets(pd.topic, MAX_TOPICLEN, stdin) == NULL)
         {
             printf("fgets failed with error.\n");
             closesocket(connectSocket);
@@ -27,10 +28,21 @@ int main()
         }
         
         // trim newline at end
-        if (sendbuff[strlen(sendbuff) - 1] == '\n')
-            sendbuff[strlen(sendbuff) - 1] = 0;
+        if (pd.topic[strlen(pd.topic) - 1] == '\n')
+            pd.topic[strlen(pd.topic) - 1] = 0;
+        
 
-        iResult = send(connectSocket, sendbuff, DEFAULT_BUFLEN, 0);
+        printf("Message: \n");
+        if (fgets(pd.message, MAX_MSGLEN, stdin) == NULL) 
+        {
+            printf("fgets failed with error.\n");
+            closesocket(connectSocket);
+            
+        }
+        if (pd.message[strlen(pd.message) - 1] == '\n')
+            pd.message[strlen(pd.message) - 1] == 0;
+
+        iResult = send(connectSocket, (char*)&pd, sizeof(PublisherData), 0);
         if (iResult == SOCKET_ERROR)
         {
             printf("send failed with error: %d\n", WSAGetLastError());
