@@ -64,8 +64,6 @@ DWORD WINAPI serverWorkerThread(LPVOID args)
 	DWORD SendBytes, RecvBytes;
 	DWORD Flags;
     
-
-    
 	while (TRUE)
 	{
 		if (GetQueuedCompletionStatus(completionPort, &BytesTransferred, (PULONG_PTR)&perHandleData, (LPOVERLAPPED*)&perIoData, INFINITE) == 0)
