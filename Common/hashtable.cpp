@@ -30,13 +30,13 @@ HashTable* table_init()
     return table;
 }
 
-bool table_add(HashTable* table, char* key, SOCKET value)
+bool table_addList(HashTable* table, char* key)
 {
     int index = hash(key);
 
     TableItem* item = &(table->items[index]);
     int iResult;
-    
+
     if (item->list == NULL)
     {
         item->list = list_init(DEFAULT_LIST_LIMIT);
@@ -49,8 +49,29 @@ bool table_add(HashTable* table, char* key, SOCKET value)
         if ((iResult = strcpy_s(item->key, MAX_KEYLEN, key)) != 0)
         {
             printf("strcpy failed with error: %d\n", iResult);
-            return NULL;
+            return false;
         }
+    }
+    else
+    {
+        printf("Specified key already exists in hash table.\n");
+        return false;
+    }
+
+    return true;
+}
+
+bool table_addSocket(HashTable* table, char* key, SOCKET value)
+{
+    int index = hash(key);
+
+    TableItem* item = &(table->items[index]);
+    int iResult;
+    
+    if (item->list == NULL)
+    {
+        printf("Key doesn't exist in hasht table.\n");
+        return false;
     }
 
     return list_addAtEnd(item->list, value);
@@ -60,7 +81,7 @@ List* table_get(HashTable* table, char* key)
 {
     int index = hash(key);
 
-    TableItem* item = &table->items[index];
+    TableItem* item = &(table->items[index]);
 
     if (item == NULL)
     {
@@ -74,7 +95,7 @@ bool table_hasKey(HashTable* table, char* key)
 {
     int index = hash(key);
 
-    TableItem* item = &table->items[index];
+    TableItem* item = &(table->items[index]);
 
     if (item->list == NULL)
     {
