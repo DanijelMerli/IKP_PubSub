@@ -15,15 +15,15 @@ bool list_addAtEnd(List* list, SOCKET data)
 {
 	if (list->len < list->limit)
 	{
-		ListItem item;
-		item.data = data;
-		item.next = NULL;
+		ListItem* item = (ListItem*)malloc(sizeof(ListItem));
+		item->data = data;
+		item->next = NULL;
 
 		ListItem* current = list->head;
 
 		if (current == NULL)
 		{
-			current = &item;
+			current = item;
 			list->head = current;
 			list->len++;
 			return true;
@@ -35,7 +35,7 @@ bool list_addAtEnd(List* list, SOCKET data)
 				current = current->next;
 			}
 
-			current->next = &item;
+			current->next = item;
 			list->len++;
 		}
 	}
