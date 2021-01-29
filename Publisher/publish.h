@@ -7,6 +7,6 @@ int publish(char* topic, char* msg);
 
 
 typedef struct PublisherData_st{
-	char* topic;
-	char* message;
+	char message[100];
+	char topic[100];
 }PublisherData;

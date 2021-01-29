@@ -5,19 +5,11 @@ int main()
 {
     // socket used to communicate with server
     SOCKET connectSocket = INVALID_SOCKET;
-    char* sendbuff = (char*)malloc(DEFAULT_BUFLEN);
-    
-    char temp3[] = "Poruka";
-    PublisherData* pd = (PublisherData*)malloc(sizeof(pd));
-   
-    char* temp = (char*)malloc(sizeof(pd->message));
-    char* temp1 = (char*)malloc(sizeof(pd->topic));
 
-    //pd->message = temp3;
-    //pd->topic = temp3;
-
+    PublisherData pd;
     
-    
+    char* temp = (char*)malloc(sizeof(char*));
+    char* temp1 = (char*)malloc(sizeof(char*));
 
     // variable used to store function return value
     int iResult;
@@ -32,7 +24,7 @@ int main()
     while (TRUE)
     {
         printf("Topic: \n");
-        if (fgets(temp, sizeof(pd->topic), stdin) == NULL)
+        if (fgets(temp, sizeof(char*), stdin) == NULL)
         {
             printf("fgets failed with error.\n");
             closesocket(connectSocket);
@@ -43,11 +35,11 @@ int main()
         if (temp[strlen(temp) - 1] == '\n')
             temp[strlen(temp) - 1] = 0;
 
-        pd->topic = temp;
+        strcpy_s(pd.topic, temp);
         
 
         printf("Message: \n");
-        if (fgets(temp1, sizeof(pd->message), stdin) == NULL) 
+        if (fgets(temp1, sizeof(char*), stdin) == NULL) 
         {
             printf("fgets failed with error.\n");
             closesocket(connectSocket);
@@ -56,12 +48,10 @@ int main()
         if (temp1[strlen(temp1) - 1] == '\n')
             temp1[strlen(temp1) - 1] == 0;
 
-        pd->message = temp1;
-
-        
+        strcpy_s(pd.message, temp1);
 
 
-        iResult = send(connectSocket, (char*)pd, sizeof(pd), 0);
+        iResult = sendto(connectSocket, (char*)&pd, sizeof(pd), 0,(LPSOCKADDR)&connectSocket, sizeof(connectSocket));
         if (iResult == SOCKET_ERROR)
         {
             printf("send failed with error: %d\n", WSAGetLastError());

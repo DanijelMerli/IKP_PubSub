@@ -71,7 +71,7 @@ DWORD WINAPI serverWorkerThread(LPVOID CompletionPortID)
         if (perHandleData->type == Publisher)
         {
             PublisherData* pubdata = (PublisherData*)perIoData->Buffer;
-            printf("Message from Publisher %d:\n Topic: %s\n Message:\n", perHandleData->socket, pubdata->message);
+            printf("Message from Publisher %d:\n Topic: %s\n Message: %s\n", perHandleData->socket, pubdata->topic, pubdata->message);
         }
         // SUBSCRIBER
         else if (perHandleData->type == Subscriber)
