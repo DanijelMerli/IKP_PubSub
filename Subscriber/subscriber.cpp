@@ -21,7 +21,8 @@ int main()
     {
         printf("fgets failed with error.\n");
         closesocket(connectSocket);
-        return -1;
+        WSACleanup();
+        return 1;
     }
 
     // trim newline at end
@@ -32,6 +33,9 @@ int main()
     if (iResult == SOCKET_ERROR)
     {
         printf("send failed with error: %d\n", WSAGetLastError());
+        closesocket(connectSocket);
+        WSACleanup();
+        return 1;
     }
 
     char* recvBuff = (char*)malloc(DEFAULT_BUFLEN);
@@ -42,13 +46,17 @@ int main()
         if (iResult == SOCKET_ERROR)
         {
             printf("recv failed with error: %d\n", WSAGetLastError());
-            break;
+            closesocket(connectSocket);
+            WSACleanup();
+            return 1;
         }
 
         if (strcmp(recvBuff, "") == 0)
         {
             printf("Requested topic not found.\n");
-            break;
+            closesocket(connectSocket);
+            WSACleanup();
+            return 1;
         }
         else
         {

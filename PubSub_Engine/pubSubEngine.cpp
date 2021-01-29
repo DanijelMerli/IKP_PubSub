@@ -33,6 +33,8 @@ int main()
         if ((threadHandle = CreateThread(NULL, 0, serverWorkerThread, (LPVOID)&args, 0, NULL)) == NULL)
         {
             printf("CreateThread failed with error: %d", GetLastError());
+            WSACleanup();
+            CloseHandle(args.completionPort);
             return 1;
         }
 
@@ -46,6 +48,7 @@ int main()
 
     CloseHandle(pubAcceptThread);
     CloseHandle(subAcceptThread);
+    CloseHandle(args.completionPort);
     WSACleanup();
     return 0;
 }

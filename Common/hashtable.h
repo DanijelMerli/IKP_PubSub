@@ -13,6 +13,7 @@ typedef struct
 
 typedef struct
 {
+    CRITICAL_SECTION cs;
     TableItem* items;
 } HashTable;
 

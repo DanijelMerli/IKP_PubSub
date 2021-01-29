@@ -27,6 +27,8 @@ HashTable* table_init()
         table->items[i].key = (char*)malloc(MAX_KEYLEN);
     }
 
+    InitializeCriticalSection(&table->cs);
+
     return table;
 }
 
@@ -34,6 +36,7 @@ bool table_addList(HashTable* table, char* key)
 {
     int index = hash(key);
 
+    EnterCriticalSection(&table->cs);
     TableItem* item = &(table->items[index]);
     int iResult;
 
@@ -58,12 +61,15 @@ bool table_addList(HashTable* table, char* key)
         return false;
     }
 
+    LeaveCriticalSection(&table->cs);
     return true;
 }
 
 bool table_addSocket(HashTable* table, char* key, SOCKET value)
 {
     int index = hash(key);
+
+    EnterCriticalSection(&table->cs);
 
     TableItem* item = &(table->items[index]);
     int iResult;
@@ -74,12 +80,17 @@ bool table_addSocket(HashTable* table, char* key, SOCKET value)
         return false;
     }
 
-    return list_addAtEnd(item->list, value);
+    bool retVal = list_addAtEnd(item->list, value);
+    
+    LeaveCriticalSection(&table->cs);
+    return retVal;
 }
 
 List* table_get(HashTable* table, char* key)
 {
     int index = hash(key);
+
+    EnterCriticalSection(&table->cs);
 
     TableItem* item = &(table->items[index]);
 
@@ -88,6 +99,8 @@ List* table_get(HashTable* table, char* key)
         return NULL;
     }
 
+    LeaveCriticalSection(&table->cs);
+
     return item->list;
 }
 
@@ -95,12 +108,16 @@ bool table_hasKey(HashTable* table, char* key)
 {
     int index = hash(key);
 
+    EnterCriticalSection(&table->cs);
+
     TableItem* item = &(table->items[index]);
 
     if (item->list == NULL)
     {
         return false;
     }
+
+    LeaveCriticalSection(&table->cs);
 
     return true;
 }
@@ -112,6 +129,8 @@ bool table_dump(HashTable* table)
         printf("null arguement error\n");
         return false;
     }
+
+    EnterCriticalSection(&table->cs);
 
     for (int i = 0; i < TABLE_SIZE; i++)
     {
@@ -132,7 +151,9 @@ bool table_dump(HashTable* table)
         }
     }
 
+    LeaveCriticalSection(&table->cs);
     free(table->items);
+    DeleteCriticalSection(&table->cs);
     free(table);
     return true;
 }
@@ -142,6 +163,8 @@ void table_print(HashTable* table)
     int j;
     TableItem* item;
     ListItem* current;
+
+    EnterCriticalSection(&table->cs);
 
     for (int i = 0; i < TABLE_SIZE; i++)
     {
@@ -164,4 +187,6 @@ void table_print(HashTable* table)
         }
         printf("\n");
     }
+
+    LeaveCriticalSection(&table->cs);
 }

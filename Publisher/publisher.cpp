@@ -23,7 +23,8 @@ int main()
         {
             printf("fgets failed with error.\n");
             closesocket(connectSocket);
-            return -1;
+            WSACleanup();
+            return 1;
         }
         
         // trim newline at end
@@ -36,7 +37,8 @@ int main()
         {
             printf("fgets failed with error.\n");
             closesocket(connectSocket);
-            
+            WSACleanup();
+            return 1;
         }
         if (pd.message[strlen(pd.message) - 1] == '\n')
             pd.message[strlen(pd.message) - 1] = 0;
@@ -45,10 +47,11 @@ int main()
         if (iResult == SOCKET_ERROR)
         {
             printf("send failed with error: %d\n", WSAGetLastError());
+            closesocket(connectSocket);
+            WSACleanup();
+            return 1;
         }
     }
-
-    getchar();
 
     closesocket(connectSocket);
     WSACleanup();

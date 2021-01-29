@@ -28,7 +28,7 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
     {
         printf("getaddrinfo failed with error: %d\n", iResult);
         WSACleanup();
-        return -1;
+        return 1;
     }
 
     // Create a SOCKET for publishers to connect to server
@@ -38,7 +38,7 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
         printf("socket failed with error: %ld\n", WSAGetLastError());
         freeaddrinfo(resultingAddress);
         WSACleanup();
-        return -1;
+        return 1;
     }
 
     // Setup the TCP publisher listening socket - bind port number and local address to socket
@@ -49,7 +49,7 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
         freeaddrinfo(resultingAddress);
         closesocket(listenSocket);
         WSACleanup();
-        return -1;
+        return 1;
     }
 
     // Since we don't need resultingAddress any more, free it
@@ -62,7 +62,7 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
         printf("listen failed with error: %d\n", WSAGetLastError());
         closesocket(listenSocket);
         WSACleanup();
-        return -1;
+        return 1;
     }
 
     printf("Accepting new publisher connections...\n");
@@ -81,7 +81,7 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
             closesocket(listenSocket);
             closesocket(acceptSocket);
             WSACleanup();
-            return -1;
+            return 1;
         }
 
         printf("Publisher connected.\n");
@@ -89,7 +89,10 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
         if ((perHandleData = (PerHandleData*)GlobalAlloc(GPTR, sizeof(PerHandleData))) == NULL)
         {
             printf("GlobalAlloc() failed with error %d\n", GetLastError());
-            return -1;
+            closesocket(listenSocket);
+            closesocket(acceptSocket);
+            WSACleanup();
+            return 1;
         }
 
         printf("Socket %d connected\n", acceptSocket);
@@ -99,7 +102,11 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
         if (CreateIoCompletionPort((HANDLE)acceptSocket, completionPort, (ULONG_PTR)perHandleData, 0) == NULL)
         {
             printf("CreateIoCompletionPort failed with error %d\n", GetLastError());
-            return -1;
+            closesocket(listenSocket);
+            closesocket(acceptSocket);
+            GlobalFree(perHandleData);
+            WSACleanup();
+            return 1;
         }
 
         PerIoData* perIoData;
@@ -108,6 +115,10 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
         if ((perIoData = (PerIoData*)GlobalAlloc(GPTR, sizeof(PerIoData))) == NULL)
         {
             printf("GlobalAlloc() failed with error %d\n", GetLastError());
+            closesocket(listenSocket);
+            closesocket(acceptSocket);
+            GlobalFree(perHandleData);
+            WSACleanup();
             return 1;
         }
 
@@ -124,7 +135,12 @@ DWORD WINAPI pubAccept(LPVOID completionPortId)
             if (WSAGetLastError() != ERROR_IO_PENDING)
             {
                 printf("WSARecv() failed with error %d\n", WSAGetLastError());
-                return -1;
+                closesocket(listenSocket);
+                closesocket(acceptSocket);
+                GlobalFree(perHandleData);
+                GlobalFree(perIoData);
+                WSACleanup();
+                return 1;
             }
         }
 	}
@@ -157,7 +173,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
     {
         printf("getaddrinfo failed with error: %d\n", iResult);
         WSACleanup();
-        return -1;
+        return 1;
     }
 
     // Create a SOCKET for publishers to connect to server
@@ -167,7 +183,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         printf("socket failed with error: %ld\n", WSAGetLastError());
         freeaddrinfo(resultingAddress);
         WSACleanup();
-        return -1;
+        return 1;
     }
 
     // Setup the TCP publisher listening socket - bind port number and local address to socket
@@ -178,7 +194,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         freeaddrinfo(resultingAddress);
         closesocket(listenSocket);
         WSACleanup();
-        return -1;
+        return 1;
     }
 
     // Since we don't need resultingAddress any more, free it
@@ -191,7 +207,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         printf("listen failed with error: %d\n", WSAGetLastError());
         closesocket(listenSocket);
         WSACleanup();
-        return -1;
+        return 1;
     }
 
     printf("Accepting new subscriber connections...\n");
@@ -210,7 +226,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
             closesocket(listenSocket);
             closesocket(acceptSocket);
             WSACleanup();
-            return -1;
+            return 1;
         }
 
         printf("Subscriber connected.\n");
@@ -218,7 +234,10 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         if ((perHandleData = (PerHandleData*)GlobalAlloc(GPTR, sizeof(PerHandleData))) == NULL)
         {
             printf("GlobalAlloc() failed with error %d\n", GetLastError());
-            return -1;
+            closesocket(listenSocket);
+            closesocket(acceptSocket);
+            WSACleanup();
+            return 1;
         }
 
         printf("Socket %d connected\n", acceptSocket);
@@ -228,7 +247,11 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         if (CreateIoCompletionPort((HANDLE)acceptSocket, completionPort, (ULONG_PTR)perHandleData, 0) == NULL)
         {
             printf("CreateIoCompletionPort failed with error %d\n", GetLastError());
-            return -1;
+            closesocket(listenSocket);
+            closesocket(acceptSocket);
+            GlobalFree(perHandleData);
+            WSACleanup();
+            return 1;
         }
 
         PerIoData* perIoData;
@@ -237,6 +260,10 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         if ((perIoData = (PerIoData*)GlobalAlloc(GPTR, sizeof(PerIoData))) == NULL)
         {
             printf("GlobalAlloc() failed with error %d\n", GetLastError());
+            closesocket(listenSocket);
+            closesocket(acceptSocket);
+            GlobalFree(perHandleData);
+            WSACleanup();
             return 1;
         }
 
@@ -253,7 +280,12 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
             if (WSAGetLastError() != ERROR_IO_PENDING)
             {
                 printf("WSARecv() failed with error %d\n", WSAGetLastError());
-                return -1;
+                closesocket(listenSocket);
+                closesocket(acceptSocket);
+                GlobalFree(perHandleData);
+                GlobalFree(perIoData);
+                WSACleanup();
+                return 1;
             }
         }
     }
@@ -276,7 +308,7 @@ DWORD WINAPI serverWorkerThread(LPVOID args)
         if (GetQueuedCompletionStatus(completionPort, &BytesTransferred, (PULONG_PTR)&perHandleData, (LPOVERLAPPED*)&perIoData, INFINITE) == 0)
         {
             printf("GetQueuedCompletionStatus() failed with error %d\n", GetLastError());
-            return 0;
+            return 1;
         }
 
         // PUBLISHER
@@ -313,7 +345,7 @@ DWORD WINAPI serverWorkerThread(LPVOID args)
                     if (send(current->data, pubdata->message, strlen(pubdata->message) + 1, 0) == SOCKET_ERROR)
                     {
                         printf("send failed with error %d\n", WSAGetLastError());
-                        return 0;
+                        return 1;
                     }
 
                     current = current->next;
@@ -352,7 +384,7 @@ DWORD WINAPI serverWorkerThread(LPVOID args)
                     if (WSAGetLastError() != ERROR_IO_PENDING)
                     {
                         printf("WSASend failed with error %d\n", WSAGetLastError());
-                        return 0;
+                        return 1;
                     }
                 }
 
@@ -377,7 +409,7 @@ DWORD WINAPI serverWorkerThread(LPVOID args)
             if (WSAGetLastError() != ERROR_IO_PENDING)
             {
                 printf("WSARecv failed with error %d\n", WSAGetLastError());
-                return 0;
+                return 1;
             }
         }
     }
