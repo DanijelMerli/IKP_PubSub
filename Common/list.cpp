@@ -11,20 +11,19 @@ List* list_init(int limit)
 	return lista;
 }
 
-bool list_addAtEnd(List* list, char* data)
+bool list_addAtEnd(List* list, SOCKET data)
 {
 	if (list->len < list->limit)
 	{
-		ListItem* item = (ListItem*)malloc(sizeof(ListItem));
-		item->data = (char*)malloc(100);
-		strcpy_s(item->data, 100, data);
-		item->next = NULL;
+		ListItem item;
+		item.data = data;
+		item.next = NULL;
 
 		ListItem* current = list->head;
 
 		if (current == NULL)
 		{
-			current = item;
+			current = &item;
 			list->head = current;
 			list->len++;
 			return true;
@@ -36,7 +35,7 @@ bool list_addAtEnd(List* list, char* data)
 				current = current->next;
 			}
 
-			current->next = item;
+			current->next = &item;
 			list->len++;
 		}
 	}
@@ -48,7 +47,7 @@ bool list_addAtEnd(List* list, char* data)
 	return true;
 }
 
-char* list_getAt(List* list, int index)
+SOCKET* list_getAt(List* list, int index)
 {
 	if (list == NULL)
 	{
@@ -62,7 +61,7 @@ char* list_getAt(List* list, int index)
 	}
 	if (index == 0)
 	{
-		return list->head->data;
+		return &(list->head->data);
 	}
 
 	ListItem* current = list->head;
@@ -72,7 +71,7 @@ char* list_getAt(List* list, int index)
 		current = current->next;
 	}
 
-	return current->data;
+	return &(current->data);
 }
 
 bool list_deleteAt(List* list, int index)
@@ -127,7 +126,7 @@ bool list_dump(List* list)
 	while (current != NULL)
 	{
 		temp = current->next;
-		free(current->data);
+		closesocket(current->data);
 		free(current);
 		current = temp;
 	}

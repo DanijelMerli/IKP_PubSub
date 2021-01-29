@@ -30,7 +30,7 @@ HashTable* table_init()
     return table;
 }
 
-bool table_add(HashTable* table, char* key, char* value)
+bool table_add(HashTable* table, char* key, SOCKET value)
 {
     int index = hash(key);
 
@@ -68,6 +68,20 @@ List* table_get(HashTable* table, char* key)
     }
 
     return item->list;
+}
+
+bool table_hasKey(HashTable* table, char* key)
+{
+    int index = hash(key);
+
+    TableItem* item = &table->items[index];
+
+    if (item->list == NULL)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 bool table_dump(HashTable* table)
@@ -124,7 +138,7 @@ void table_print(HashTable* table)
         printf("Table row %d:\n", i);
         while (current != NULL)
         {
-            printf("%s\n", current->data);
+            printf("Socket: %d\n", current->data);
             current = current->next;
         }
         printf("\n");

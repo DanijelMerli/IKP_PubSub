@@ -2,12 +2,13 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include <WinSock2.h>
 
 #define DEFAULT_LIST_LIMIT 1000
 
 typedef struct ListItem_st
 {
-	char* data;
+	SOCKET data;
 	struct ListItem_st* next;
 } ListItem;
 
@@ -26,9 +27,9 @@ List* list_init(int limit);
 // add item to end of list if under the size limit
 // returns true if successful
 // returns false if error
-bool list_addAtEnd(List* list, char* data);
+bool list_addAtEnd(List* list, SOCKET data);
 
-char* list_getAt(List* list, int index);
+SOCKET* list_getAt(List* list, int index);
 
 // deletes item from list at specified index
 // returns true if successful
