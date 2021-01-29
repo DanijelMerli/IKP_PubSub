@@ -13,6 +13,12 @@
 #define MAX_TOPICLEN 512
 #define MAX_MSGLEN 2048
 
+typedef struct PublisherData_st
+{
+	char topic[MAX_TOPICLEN];
+	char message[MAX_MSGLEN];
+}PublisherData;
+
 // connect to PubSub Engine
 // port - port of server socket (publisher-10000 / subscriber-10001)
 // returns socket handle if successful 
@@ -20,4 +26,6 @@
 SOCKET connect(DWORD port);
 
 // Initialize windows sockets library
+// returns true if successful
+// returns false if error
 bool initializeWindowsSockets(); 
