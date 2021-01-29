@@ -5,12 +5,8 @@ int main()
 {
     // socket used to communicate with server
     SOCKET connectSocket = INVALID_SOCKET;
-
     PublisherData pd;
     
-    char* temp = (char*)malloc(sizeof(char*));
-    char* temp1 = (char*)malloc(sizeof(char*));
-
     // variable used to store function return value
     int iResult;
 
@@ -24,7 +20,7 @@ int main()
     while (TRUE)
     {
         printf("Topic: \n");
-        if (fgets(temp, sizeof(char*), stdin) == NULL)
+        if (fgets(pd.topic, MAX_TOPICLEN, stdin) == NULL)
         {
             printf("fgets failed with error.\n");
             closesocket(connectSocket);
@@ -32,26 +28,21 @@ int main()
         }
         
         // trim newline at end
-        if (temp[strlen(temp) - 1] == '\n')
-            temp[strlen(temp) - 1] = 0;
-
-        strcpy_s(pd.topic, temp);
+        if (pd.topic[strlen(pd.topic) - 1] == '\n')
+            pd.topic[strlen(pd.topic) - 1] = 0;
         
 
         printf("Message: \n");
-        if (fgets(temp1, sizeof(char*), stdin) == NULL) 
+        if (fgets(pd.message, MAX_MSGLEN, stdin) == NULL) 
         {
             printf("fgets failed with error.\n");
             closesocket(connectSocket);
             
         }
-        if (temp1[strlen(temp1) - 1] == '\n')
-            temp1[strlen(temp1) - 1] == 0;
+        if (pd.message[strlen(pd.message) - 1] == '\n')
+            pd.message[strlen(pd.message) - 1] == 0;
 
-        strcpy_s(pd.message, temp1);
-
-
-        iResult = sendto(connectSocket, (char*)&pd, sizeof(pd), 0,(LPSOCKADDR)&connectSocket, sizeof(connectSocket));
+        iResult = send(connectSocket, (char*)&pd, sizeof(PublisherData), 0);
         if (iResult == SOCKET_ERROR)
         {
             printf("send failed with error: %d\n", WSAGetLastError());

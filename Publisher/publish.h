@@ -1,4 +1,5 @@
 #pragma once
+#include "../Common/connect.h"
 
 // send topic and msg to PubSub Engine
 // returns number of bytes sent
@@ -7,6 +8,6 @@ int publish(char* topic, char* msg);
 
 
 typedef struct PublisherData_st{
-	char message[100];
-	char topic[100];
+	char topic[MAX_TOPICLEN];
+	char message[MAX_MSGLEN];
 }PublisherData;

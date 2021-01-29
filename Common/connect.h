@@ -10,6 +10,8 @@
 #define PUB_PORT_INT 10000
 #define SUB_PORT_INT 10001
 #define DEFAULT_BUFLEN 4096
+#define MAX_TOPICLEN 512
+#define MAX_MSGLEN 2048
 
 // connect to PubSub Engine
 // port - port of server socket (publisher-10000 / subscriber-10001)
