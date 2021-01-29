@@ -1,5 +1,4 @@
 #include "../Common/connect.h"
-#include "subscribe.h"
 
 int main()
 {
@@ -16,25 +15,44 @@ int main()
         return 1;
     }
 
-    while (TRUE)
+    printf("Topic to subscribe to: \n");
+
+    if (fgets(sendbuff, DEFAULT_BUFLEN, stdin) == NULL)
     {
-        printf("Send message: \n");
+        printf("fgets failed with error.\n");
+        closesocket(connectSocket);
+        return -1;
+    }
 
-        if (fgets(sendbuff, DEFAULT_BUFLEN, stdin) == NULL)
-        {
-            printf("fgets failed with error.\n");
-            closesocket(connectSocket);
-            return -1;
-        }
+    // trim newline at end
+    if (sendbuff[strlen(sendbuff) - 1] == '\n')
+        sendbuff[strlen(sendbuff) - 1] = 0;
 
-        // trim newline at end
-        if (sendbuff[strlen(sendbuff) - 1] == '\n')
-            sendbuff[strlen(sendbuff) - 1] = 0;
+    iResult = send(connectSocket, sendbuff, DEFAULT_BUFLEN, 0);
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("send failed with error: %d\n", WSAGetLastError());
+    }
 
-        iResult = send(connectSocket, sendbuff, DEFAULT_BUFLEN, 0);
+    char* recvBuff = (char*)malloc(DEFAULT_BUFLEN);
+
+    while (true)
+    {
+        iResult = recv(connectSocket, recvBuff, DEFAULT_BUFLEN, 0);
         if (iResult == SOCKET_ERROR)
         {
-            printf("send failed with error: %d\n", WSAGetLastError());
+            printf("recv failed with error: %d\n", WSAGetLastError());
+            break;
+        }
+
+        if (strcmp(recvBuff, "") == 0)
+        {
+            printf("Requested topic not found.\n");
+            break;
+        }
+        else
+        {
+            printf("Recieved message:\n%s\n", recvBuff);
         }
     }
 

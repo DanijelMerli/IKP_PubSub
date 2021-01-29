@@ -194,7 +194,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
         return -1;
     }
 
-    printf("Accepting new publisher connections...\n");
+    printf("Accepting new subscriber connections...\n");
 
     while (TRUE)
     {
@@ -213,7 +213,7 @@ DWORD WINAPI subAccept(LPVOID completionPortId)
             return -1;
         }
 
-        printf("Publisher connected.\n");
+        printf("Subscriber connected.\n");
 
         if ((perHandleData = (PerHandleData*)GlobalAlloc(GPTR, sizeof(PerHandleData))) == NULL)
         {

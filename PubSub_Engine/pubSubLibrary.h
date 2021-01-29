@@ -1,6 +1,7 @@
 #pragma once
 #include <WS2tcpip.h>
 #include "../Common/connect.h"
+#include "../Common/hashtable.h"
 
 enum SocketType 
 {
@@ -14,7 +15,6 @@ typedef struct
 	SocketType type;
 } PerHandleData;
 
-// Typedef definition
 typedef struct
 {
 	OVERLAPPED Overlapped;
@@ -23,6 +23,12 @@ typedef struct
 	DWORD BytesSEND;
 	DWORD BytesRECV;
 } PerIoData;
+
+typedef struct
+{
+	HANDLE completionPort;
+	HashTable* table;
+} ThreadArgs;
 
 // accepts publisher connections 
 // adds accepted socket handles to IOCP
