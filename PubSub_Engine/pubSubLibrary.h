@@ -39,3 +39,6 @@ DWORD WINAPI pubAccept(LPVOID completionPort);
 // adds accepted socket handles to IOCP
 // returns -1 if error
 DWORD WINAPI subAccept(LPVOID completionPort);
+
+// waits for IO operation and resolves it
+DWORD WINAPI serverWorkerThread(LPVOID lpParam);
